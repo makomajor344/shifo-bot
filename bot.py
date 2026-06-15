@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import logging
 import os
 from aiohttp import web
@@ -13,6 +13,7 @@ from aiogram.client.default import DefaultBotProperties
 import database as db
 
 # ================= SERVER QISMI (RENDER UCHUN) =================
+
 async def health_check(request):
     return web.Response(text="Bot is running!")
 
@@ -24,6 +25,20 @@ async def start_web_server():
     port = int(os.environ.get("PORT", 8080))
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
+
+# ================= KEEPALIVE QISMI =================
+
+async def keep_alive():
+    while True:
+        try:
+            import aiohttp
+            async with aiohttp.ClientSession() as session:
+                async with session.get("https://shifo24.onrender.com") as resp:
+                    logging.info(f"Keep-alive ping: {resp.status}")
+        except Exception as e:
+            logging.error(f"Keep-alive xatosi: {e}")
+        await asyncio.sleep(300)
+
 # ===============================================================
 
 # Loggingni yoqish
@@ -82,6 +97,20 @@ def build_grid_keyboard(items, prefix):
         inline_keyboard.append(row)
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
+# SIZNING build_grid_keyboard FUNKSIYANGIZDAN KEYIN:
+
+async def keep_alive():
+    while True:
+        try:
+            import aiohttp
+            async with aiohttp.ClientSession() as session:
+                async with session.get("https://shifo-bot.onrender.com") as resp:
+                    logging.info(f"Keep-alive ping: {resp.status}")
+        except Exception as e:
+            logging.error(f"Keep-alive xatosi: {e}")
+        await asyncio.sleep(300)
+
+# KEYIN ESA SHU YERDAN HANDLERLARINGIZ (dp.message va b.) BOSHLANADI
 # ================= START =================
 @dp.message(CommandStart())
 async def start(m: types.Message, state: FSMContext):
@@ -96,17 +125,13 @@ async def start(m: types.Message, state: FSMContext):
 @dp.callback_query(F.data == "role_doc")
 async def role_doc(c: types.CallbackQuery, state: FSMContext):
     uid = c.from_user.id
-    
     existing_doc = db.get_doctor_by_id(uid)
-    
     if existing_doc:
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🔄 Profilni qayta faollashtirish", callback_data="doc_re_verify")],
             [InlineKeyboardButton(text="❌ Bekor qilish", callback_data="role_doc_cancel")]
         ])
-        
         status_txt = "Tasdiqlangan" if existing_doc['status'] == 'approved' else "Kutilmoqda / Rad etilgan"
-        
         await c.message.answer(
             f"ℹ️ <b>Siz tizimda ro'yxatdan o'tgansiz!</b>\n\n"
             f"👤 Ism: {existing_doc['full_name']}\n"
@@ -118,7 +143,6 @@ async def role_doc(c: types.CallbackQuery, state: FSMContext):
         )
         await c.answer()
         return
-
     await state.set_state(DocRegister.district)
     kb = build_grid_keyboard(districts, "doc_d")
     await c.message.answer("📍 Shifokor sifatida hududingizni tanlang:", reply_markup=kb)
@@ -160,15 +184,12 @@ async def doc_exp(m: types.Message, state: FSMContext):
     data = await state.get_data()
     uid = m.from_user.id
     username = m.from_user.username or "yo'q"
-    
     try:
         db.add_doctor(uid, data['name'], username, data['spec'], m.text, data['district'])
-        
         admin_kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🟢 Tasdiqlash", callback_data=f"admin_app_{uid}")],
             [InlineKeyboardButton(text="🔴 Rad etish", callback_data=f"admin_rej_{uid}")],
         ])
-        
         try:
             await bot.send_message(
                 ADMIN_ID,
@@ -185,11 +206,9 @@ async def doc_exp(m: types.Message, state: FSMContext):
         except Exception as admin_err:
             logging.error(f"Adminga xabar yuborishda xato: {admin_err}")
             await m.answer(f"✅ Arizangiz bazaga muvaffaqiyatli saqlandi. Ammo adminga bildirishnoma bormadi.")
-
     except Exception as db_err:
         logging.error(f"Baza (database) xatoligi: {db_err}")
         await m.answer(f"❌ Xatolik yuz berdi! Ma'lumotlarni bazaga saqlab bo'lmadi.\n\n<code>{str(db_err)}</code>")
-
     await state.clear()
 
 # ================= RE-VERIFY FOR OLD DOCTORS =================
@@ -198,17 +217,14 @@ async def doc_re_verify(c: types.CallbackQuery):
     uid = c.from_user.id
     doc = db.get_doctor_by_id(uid)
     username = c.from_user.username or "yo'q"
-    
     if not doc:
         await c.message.answer("❌ Xatolik: Ma'lumotlaringiz topilmadi.")
         await c.answer()
         return
-        
     admin_kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🟢 Qayta faollashtirish", callback_data=f"admin_app_{uid}")],
         [InlineKeyboardButton(text="🔴 Rad etish", callback_data=f"admin_rej_{uid}")],
     ])
-    
     await bot.send_message(
         ADMIN_ID,
         f"⚠️ <b>ESKI SHIFOKOR PROFILINI QAYTA FAOLLASHTIRMOQCHI!</b>\n\n"
@@ -246,10 +262,8 @@ async def pat_spec(c: types.CallbackQuery, state: FSMContext):
     spec = specs[i]
     data = await state.get_data()
     dist = data['district']
-    
     await state.update_data(spec=spec)
     doctors = db.get_doctors_by_filter(dist, spec)
-    
     if not doctors:
         retry_kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🔄 Boshqa mutaxassislik tanlash", callback_data="change_spec_retry")],
@@ -262,7 +276,6 @@ async def pat_spec(c: types.CallbackQuery, state: FSMContext):
         )
         await c.answer()
         return
-
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=f"👨‍⚕️ {d['full_name']} (Staj: {d['experience']}, ⭐{d['rating']})", callback_data=f"choose_doc_{d['doctor_id']}")]
         for d in doctors
@@ -282,11 +295,9 @@ async def change_spec_retry(c: types.CallbackQuery, state: FSMContext):
 async def pat_select_doc(c: types.CallbackQuery, state: FSMContext):
     did = int(c.data.split("_")[2])
     doctor = db.get_doctor_by_id(did)
-    
     if not doctor or doctor['balance'] < 10000:
         await c.message.answer("❌ Tanlangan shifokor xizmat ko'rsata olmaydi (Balans kamligi sababli). Boshqa shifokor tanlang.")
         return
-
     await state.update_data(doctor_id=did)
     await state.set_state(PatOrder.name)
     await c.message.answer("📝 Ism va Familiyangizni kiriting:")
@@ -315,31 +326,39 @@ async def pat_age(m: types.Message, state: FSMContext):
     await state.update_data(age=m.text)
     await state.set_state(PatOrder.address)
     await m.answer("🏠 To'liq manzilingizni kiriting (Ko'cha, uy):")
-
 @dp.message(PatOrder.address)
 async def pat_address(m: types.Message, state: FSMContext):
-    await state.update_data(address=m.text)
-    await state.set_state(PatOrder.complaint)
-    await m.answer("📝 Shifokorga murojaat qilish sababingizni (ariza mazmunini) qisqacha yozing:")
-
+    try:
+        # Manzilni saqlash
+        await state.update_data(address=m.text)
+        
+        # Keyingi holatga o'tish
+        await state.set_state(PatOrder.complaint)
+        
+        # Bemorga javob yuborish
+        await m.answer("📝 Endi shifokorga murojaat qilish sababingizni (ariza mazmunini) qisqacha yozing:")
+        
+        # Log yozish (agar qotib qolsa, logda ko'rinadi)
+        logging.info(f"User {m.from_user.id} address set. Next: complaint.")
+    except Exception as e:
+        # Xatolik bo'lsa logga yozish
+        logging.error(f"Error in pat_address: {e}")
+        await m.answer("❌ Xatolik yuz berdi. Iltimos, /start buyrug'ini yuborib qaytadan urinib ko'ring.")
+        await state.clear()
 @dp.message(PatOrder.complaint)
 async def pat_complaint(m: types.Message, state: FSMContext):
     data = await state.get_data()
     pid = m.from_user.id
     did = data['doctor_id']
-    
     doctor_info = db.get_doctor_by_id(did)
     doc_name_txt = doctor_info['full_name'] if doctor_info else "Noma'lum"
-    
     cid = db.create_call(pid, did, data['name'], data['phone'], data['age'], data['address'], m.text)
-    
     doc_kb = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text="🟢 Qabul qilish", callback_data=f"doc_accept_{cid}"),
             InlineKeyboardButton(text="🔴 Rad etish", callback_data=f"doc_reject_{cid}")
         ]
     ])
-    
     await bot.send_message(
         did,
         f"🔔 <b>YANGI ARIZA KELDI!</b>\n\n"
@@ -350,7 +369,6 @@ async def pat_complaint(m: types.Message, state: FSMContext):
         f"Arizani qabul qilasizmi?",
         reply_markup=doc_kb
     )
-    
     try:
         await bot.send_message(
             ADMIN_ID,
@@ -363,7 +381,6 @@ async def pat_complaint(m: types.Message, state: FSMContext):
         )
     except Exception as e:
         logging.error(f"Adminga ariza xabarini yuborishda xato: {e}")
-        
     await m.answer("✅ Arizangiz shifokorga yuborildi. Shifokor tasdig'ini kuting...")
     await state.clear()
 
@@ -372,21 +389,17 @@ async def pat_complaint(m: types.Message, state: FSMContext):
 async def doc_accept(c: types.CallbackQuery):
     cid = int(c.data.split("_")[2])
     call = db.get_call(cid)
-    
     if not call or call['status'] != 'new':
         await c.message.answer("Bu chaqiruv eskirgan yoki bekor qilingan.")
         await c.answer()
         return
-        
     db.update_call(cid, 'accepted_by_doc')
-    
     pat_agree_kb = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text="🤝 Roziman", callback_data=f"pat_agree_{cid}"),
             InlineKeyboardButton(text="❌ Rad etaman", callback_data=f"pat_cancel_{cid}")
         ]
     ])
-    
     await bot.send_message(
         call['patient_id'],
         f"🟢 Shifokor sizning chaqiruvingizni qabul qildi!\n\n"
@@ -396,7 +409,6 @@ async def doc_accept(c: types.CallbackQuery):
         f"Shartlarga rozimisiz?",
         reply_markup=pat_agree_kb
     )
-    
     await c.message.answer("✅ Bemorga rozilik so'rovi yuborildi.")
     await c.answer()
 
@@ -404,14 +416,12 @@ async def doc_accept(c: types.CallbackQuery):
 async def doc_reject(c: types.CallbackQuery):
     cid = int(c.data.split("_")[2])
     call = db.get_call(cid)
-    
     if call:
         db.update_call(cid, 'rejected_by_doc')
         await bot.send_message(call['patient_id'], "🔴 Afsuski, shifokor hozirda bandligi sababli chaqiruvingizni rad etdi.")
         try:
             await bot.send_message(ADMIN_ID, f"❌ <b>ID {cid} li ariza rad etildi.</b> Shifokor arizani rad etdi.")
         except: pass
-    
     await c.message.answer("🔴 Chaqiruv rad etildi.")
     await c.answer()
 
@@ -420,19 +430,15 @@ async def doc_reject(c: types.CallbackQuery):
 async def pat_agree(c: types.CallbackQuery):
     cid = int(c.data.split("_")[2])
     call = db.get_call(cid)
-    
     if not call or call['status'] != 'accepted_by_doc':
         await c.message.answer("Bu buyurtma jarayoni yakunlangan.")
         await c.answer()
         return
-
     db.update_call(cid, 'in_progress')
     db.set_busy(call['doctor_id'], 1)
-    
     finish_kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🏁 Konsultatsiyani yakunlash", callback_data=f"finish_call_{cid}")]
     ])
-    
     await bot.send_message(
         call['doctor_id'],
         f"🚀 <b>Bemor shartlarga rozi bo'ldi!</b>\n\n"
@@ -445,7 +451,6 @@ async def pat_agree(c: types.CallbackQuery):
         f"⚠️ Jarayonni tugatgach, quyidagi tugmani bosing!",
         reply_markup=finish_kb
     )
-    
     try:
         await bot.send_message(
             ADMIN_ID,
@@ -456,7 +461,6 @@ async def pat_agree(c: types.CallbackQuery):
         )
     except:
         pass
-    
     await c.message.answer("✅ Rahmat! Roziligingiz shifokorga yuborildi. Tez orada yetib boradi.")
     await c.answer()
 
@@ -464,14 +468,12 @@ async def pat_agree(c: types.CallbackQuery):
 async def pat_cancel(c: types.CallbackQuery):
     cid = int(c.data.split("_")[2])
     call = db.get_call(cid)
-    
     if call:
         db.update_call(cid, 'cancelled_by_patient')
         await bot.send_message(call['doctor_id'], "🔴 Bemor shartlarga rozi bo'lmadi, chaqiruv bekor qilindi.")
         try:
             await bot.send_message(ADMIN_ID, f"🧑❌ <b>ID {cid} li ariza bekor qilindi.</b> Bemor shartlarga rozi bo'lmadi.")
         except: pass
-        
     await c.message.answer("❌ Chaqiruv bekor qilindi.")
     await c.answer()
 
@@ -480,21 +482,17 @@ async def pat_cancel(c: types.CallbackQuery):
 async def finish_call(c: types.CallbackQuery):
     cid = int(c.data.split("_")[2])
     call = db.get_call(cid)
-    
     if not call or call['status'] != 'in_progress':
         await c.message.answer("Bu chaqiruv allaqachon yakunlangan.")
         await c.answer()
         return
-
     did = call['doctor_id']
     db.update_call(cid, 'done')
     db.set_busy(did, 0)
     db.deduct_balance(did, 10000)
-    
     rate_kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=f"{i} ⭐", callback_data=f"rate_{did}_{i}") for i in range(1, 6)]
     ])
-    
     await bot.send_message(call['patient_id'], "🏥 Konsultatsiya yakunlandi. Shifo tilaymiz! Shifokor xizmatini baholang:", reply_markup=rate_kb)
     await c.message.answer("💰 Chaqiruv yakunlandi. Balansingizdan 10 000 so'm yechildi.")
     try:
@@ -507,7 +505,6 @@ async def rate_doc_callback(c: types.CallbackQuery):
     _, did, score = c.data.split("_")
     did = int(did)
     score = int(score)
-    
     db.add_rating(did, score)
     await c.message.answer("❤️ Baholaganingiz uchun rahmat!")
     await c.answer()
@@ -524,12 +521,10 @@ async def check_balance(m: types.Message):
 @dp.message(Command("admin"))
 async def admin_panel(m: types.Message):
     if m.from_user.id != ADMIN_ID: return
-    
     admin_kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="👨‍⚕️ Barcha Shifokorlar", callback_data="admin_list_docs")],
         [InlineKeyboardButton(text="📋 Barcha Chaqiriqlar", callback_data="admin_list_calls")]
     ])
-    
     await m.answer(
         "🏥 <b>ADMIN PANELGA XUSH KELIBSIZ!</b>\n\n"
         "Buyruqlar:\n"
@@ -557,7 +552,6 @@ async def fill_balance_save(m: types.Message, state: FSMContext):
         amount = int(m.text)
         data = await state.get_data()
         did = data['target_doc_id']
-        
         db.add_balance(did, amount)
         await m.answer(f"✅ ID: {did} shifokor balansiga {amount} so'm qo'shildi.")
         await bot.send_message(did, f"💰 Admin balansingizni {amount} so'mga to'ldirdi!")
@@ -587,18 +581,15 @@ async def admin_reject(c: types.CallbackQuery):
 @dp.callback_query(F.data == "admin_list_docs")
 async def admin_list_docs(c: types.CallbackQuery):
     if c.from_user.id != ADMIN_ID: return
-    
     conn = db.get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM doctors")
     rows = cursor.fetchall()
     conn.close()
-    
     if not rows:
         await c.message.answer("📭 Bazada birorta ham shifokor yo'q.")
         await c.answer()
         return
-        
     text = "👨‍⚕️ <b>BAZADAGI SHIFOKORLAR RO'YXATI:</b>\n\n"
     for r in rows:
         status_emoji = "🟢" if r['status'] == 'approved' else "🟡"
@@ -612,7 +603,6 @@ async def admin_list_docs(c: types.CallbackQuery):
             f"🔄 Holat: {busy_emoji}\n"
             f"---------------------------\n"
         )
-    
     if len(text) > 4096:
         for x in range(0, len(text), 4096):
             await c.message.answer(text[x:x+4096])
@@ -623,18 +613,15 @@ async def admin_list_docs(c: types.CallbackQuery):
 @dp.callback_query(F.data == "admin_list_calls")
 async def admin_list_calls(c: types.CallbackQuery):
     if c.from_user.id != ADMIN_ID: return
-    
     conn = db.get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM calls ORDER BY id DESC LIMIT 20")
     rows = cursor.fetchall()
     conn.close()
-    
     if not rows:
         await c.message.answer("📭 Tizimda hali chaqiriqlar bo'lmagan.")
         await c.answer()
         return
-        
     text = "📋 <b>OXIRGI CHAQIRIQLAR RO'YXATI (MAX 20 TA):</b>\n\n"
     for r in rows:
         status_map = {
@@ -646,7 +633,6 @@ async def admin_list_calls(c: types.CallbackQuery):
             'done': "🏁 Yakunlandi"
         }
         status_txt = status_map.get(r['status'], r['status'])
-        
         text += (
             f"🔢 <b>Chaqiruv ID: {r['id']}</b>\n"
             f"🧑 Bemor: {r['patient_name']} ({r['phone']})\n"
@@ -656,7 +642,6 @@ async def admin_list_calls(c: types.CallbackQuery):
             f"📊 Status: <b>{status_txt}</b>\n"
             f"---------------------------\n"
         )
-        
     if len(text) > 4096:
         for x in range(0, len(text), 4096):
             await c.message.answer(text[x:x+4096])
@@ -666,21 +651,14 @@ async def admin_list_calls(c: types.CallbackQuery):
 
 # ================= POLLING =================
 async def main():
-    try:
-        # Web serverni ishga tushirish (Render uchun)
-        await start_web_server()
-        
-        db.init_db()
-        print("Bot ishga tushirilmoqda...")
-        
-        # Webhookni tozalash
-        await bot.delete_webhook(drop_pending_updates=True) 
-        
-        print("Polling boshlandi...")
-        await dp.start_polling(bot)
-        
-    except Exception as e:
-        print(f"KRITIK XATOLIK: {e}")
+    db.init_db()
+    asyncio.create_task(start_web_server())
+    asyncio.create_task(keep_alive())
+
+    logging.info("Bot ishga tushirilmoqda...")
+    await bot.delete_webhook(drop_pending_updates=True)
+    logging.info("Polling boshlandi...")
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
