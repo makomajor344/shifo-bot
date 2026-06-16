@@ -33,7 +33,7 @@ async def keep_alive():
         try:
             import aiohttp
             async with aiohttp.ClientSession() as session:
-                async with session.get("https://shifo24.onrender.com") as resp:
+                async with session.get("https://shifo-bot-nrmv.onrender.com") as resp:
                     logging.info(f"Keep-alive ping: {resp.status}")
         except Exception as e:
             logging.error(f"Keep-alive xatosi: {e}")
