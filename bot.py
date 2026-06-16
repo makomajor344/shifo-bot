@@ -404,7 +404,7 @@ async def doc_accept(c: types.CallbackQuery):
         call['patient_id'],
         f"🟢 Shifokor sizning chaqiruvingizni qabul qildi!\n\n"
         f"⚠️ <b>DIQQAT:</b>\n"
-        f"💵 Konsulturaliya narxi: 50 000 so'm.\n"
+        f"💵 Konsulturaliya narxi: 30 000 so'm.\n"
         f"Taxi qo'shimcha ravishda bemor tomonidan to'lanadi.\n\n"
         f"Shartlarga rozimisiz?",
         reply_markup=pat_agree_kb
