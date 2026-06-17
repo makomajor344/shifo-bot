@@ -23,7 +23,7 @@ async def start_web_server():
     runner = web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 8080))
-    site = web.TCPSite(runner, "0.0.0.0", port)
+    site = web.TCPSite(runner, '0.0.0.0', 10000) # Port 10000 bo'lishi shart!
     await site.start()
 
 # ================= KEEPALIVE QISMI =================
@@ -658,7 +658,8 @@ async def main():
     logging.info("Bot ishga tushirilmoqda...")
     await bot.delete_webhook(drop_pending_updates=True)
     logging.info("Polling boshlandi...")
-    await dp.start_polling(bot)
+   # Pollingni cheklash
+await dp.start_polling(bot, drop_pending_updates=True) 
 
 if __name__ == "__main__":
     asyncio.run(main())
