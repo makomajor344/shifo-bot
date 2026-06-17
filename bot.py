@@ -23,7 +23,7 @@ async def start_web_server():
     runner = web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 8080))
-    site = web.TCPSite(runner, '0.0.0.0', 10000) # Port 10000 bo'lishi shart!
+    site = web.TCPSite(runner, '0.0.0.0', 10000)
     await site.start()
 
 # ================= KEEPALIVE QISMI =================
@@ -33,7 +33,7 @@ async def keep_alive():
         try:
             import aiohttp
             async with aiohttp.ClientSession() as session:
-                async with session.get("https://shifo-bot-nrmv.onrender.com") as resp:
+                async with session.get("https://https://shifo-bot-lh6b.onrender.com") as resp:
                     logging.info(f"Keep-alive ping: {resp.status}")
         except Exception as e:
             logging.error(f"Keep-alive xatosi: {e}")
@@ -404,7 +404,7 @@ async def doc_accept(c: types.CallbackQuery):
         call['patient_id'],
         f"🟢 Shifokor sizning chaqiruvingizni qabul qildi!\n\n"
         f"⚠️ <b>DIQQAT:</b>\n"
-        f"💵 Konsulturaliya narxi: 30 000 so'm.\n"
+        f"💵 Konsulturaliya narxi: 40 000 so'm.\n"
         f"Taxi qo'shimcha ravishda bemor tomonidan to'lanadi.\n\n"
         f"Shartlarga rozimisiz?",
         reply_markup=pat_agree_kb
@@ -658,7 +658,6 @@ async def main():
     logging.info("Bot ishga tushirilmoqda...")
     await bot.delete_webhook(drop_pending_updates=True)
     logging.info("Polling boshlandi...")
-   # Pollingni cheklash
 await dp.start_polling(bot, drop_pending_updates=True) 
 
 if __name__ == "__main__":
