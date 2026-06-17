@@ -658,7 +658,7 @@ async def main():
     logging.info("Bot ishga tushirilmoqda...")
     await bot.delete_webhook(drop_pending_updates=True)
     logging.info("Polling boshlandi...")
-await dp.start_polling(bot, drop_pending_updates=True) 
+    await dp.start_polling(bot, drop_pending_updates=True) 
 
 if __name__ == "__main__":
     asyncio.run(main())
