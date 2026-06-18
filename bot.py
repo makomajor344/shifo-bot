@@ -120,7 +120,20 @@ async def start(m: types.Message, state: FSMContext):
         [InlineKeyboardButton(text="🧑 Bemor (Chaqiruv qilish)", callback_data="role_pat")]
     ])
     await m.answer("🏥 <b>@SHIFO24_bot</b> ga xush kelibsiz! Tizimga kirish uchun rolingizni tanlang:", reply_markup=kb)
-
+@dp.message(Command("help"))
+async def help_command(m: types.Message):
+    text = (
+        "🆘 <b>YORDAM MARKAZI</b>\n\n"
+        "<b>Bemorlar uchun:</b>\n"
+        "• <code>/start</code> - Bosh menyuga qaytish va shifokor qidirish.\n"
+        "• Chaqiruvdan oldin shifokor reytingini va stajini tekshiring.\n\n"
+        "<b>Shifokorlar uchun:</b>\n"
+        "• <code>/balance</code> - Balansingizni tekshirish.\n"
+        "• <code>/start</code> - Profilingiz holatini ko'rish.\n\n"
+        "⚠️ <b>Muhim:</b> Agar sizda texnik xatolik yuz bersa yoki admin bilan bog'lanmoqchi bo'lsangiz, bizning aloqa kanalimizga yozing: @admishifo24"
+    )
+    await m.answer(text)
+# --------------------------
 # ================= ROLE SELECTION =================
 @dp.callback_query(F.data == "role_doc")
 async def role_doc(c: types.CallbackQuery, state: FSMContext):
