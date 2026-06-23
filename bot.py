@@ -34,7 +34,7 @@ async def keep_alive():
         try:
             import aiohttp
             async with aiohttp.ClientSession() as session:
-                async with session.get("https://https://shifo-bot-lh6b.onrender.com") as resp:
+                async with session.get("https://shifo-bot-lh6b.onrender.com") as resp:
                     logging.info(f"Keep-alive ping: {resp.status}")
         except Exception as e:
             logging.error(f"Keep-alive xatosi: {e}")
@@ -318,7 +318,7 @@ async def pat_select_doc(c: types.CallbackQuery, state: FSMContext):
         return
     await state.update_data(doctor_id=did)
     await state.set_state(PatOrder.name)
-   await c.message.answer(
+    await c.message.answer(
         "⚠️ <b>DIQQAT! QONUNIY OGOHLANTIRISH</b>\n\n"
         "Shifokorni chaqirishda faqat haqiqiy ma’lumotlarni kiriting.\n\n"
         "O‘zbekiston Respublikasi qonunchiligiga ko‘ra, bila turib yolg‘on xabar berish (shu jumladan, shifokorlarni asossiz chaqirish) qonun bilan ta’qib qilinadi va javobgarlikka tortilishga sabab bo‘lishi mumkin.\n\n"
@@ -641,8 +641,9 @@ async def admin_list_docs(c: types.CallbackQuery):
             await c.message.answer(text[x:x+4096])
     else:
         await c.message.answer(text)
-    
+        
     await c.answer()
+
  @dp.callback_query(F.data == "admin_list_calls")
 async def admin_list_calls(c: types.CallbackQuery):
     if c.from_user.id != ADMIN_ID: return
@@ -672,7 +673,7 @@ async def admin_list_calls(c: types.CallbackQuery):
         status_text = status_map.get(r['status'], r['status'])
         created_at = r.get('created_at', 'Noma\'lum')
         finished_at = r.get('finished_at', '---')
-       text += (
+        text += (
             f"🔢 <b>ID: {r['id']}</b>\n"
             f"📊 Status: {status_text}\n"
             f"⏱ <b>Ochildi:</b> {created_at}\n"
