@@ -638,7 +638,7 @@ async def admin_list_docs(c: types.CallbackQuery):
     else:
         await c.message.answer(text)               # Bu qator 8 ta probel ichkarida
     
-    await c.answer()                               # Bu qator 4 ta probel ichkarida
+    await c.answer(                               # Bu qator 4 ta probel ichkarida
  @dp.callback_query(F.data == "admin_list_calls")
 async def admin_list_calls(c: types.CallbackQuery):
     if c.from_user.id != ADMIN_ID: return
