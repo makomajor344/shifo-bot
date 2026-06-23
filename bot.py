@@ -691,23 +691,7 @@ async def admin_list_calls(c: types.CallbackQuery):
         await c.message.answer(text)
         
     await c.answer()
-       status_txt = status_map.get(r['status'], r['status'])
-        text += (
-            f"🔢 <b>Chaqiruv ID: {r['id']}</b>\n"
-            f"🧑 Bemor: {r['patient_name']} ({r['phone']})\n"
-            f"🏠 Manzil: {r['address']}\n"
-            f"👨‍⚕️ Shifokor ID: <code>{r['doctor_id']}</code>\n"
-            f"🤒 Murojaat: {r['complaint']}\n"
-            f"📊 Status: <b>{status_txt}</b>\n"
-            f"---------------------------\n"
-        )
-    if len(text) > 4096:
-        for x in range(0, len(text), 4096):
-            await c.message.answer(text[x:x+4096])
-    else:
-        await c.message.answer(text)
-    await c.answer()
-
+       
 # ================= POLLING =================
 async def main():
     db.init_db()
