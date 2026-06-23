@@ -1,6 +1,7 @@
 ﻿import asyncio
 import logging
 import os
+from datetime import datetime
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -82,7 +83,7 @@ specs = [
     "Kardiolog", "Nevropatolog", "Psixiatr", "Endokrinolog",
     "Gastroenterolog", "Nefrolog", "Pulmonolog", "Ginekolog",
     "Pediatr", "Dermatolog", "Oftalmolog", "LOR", "Jarroh",
-    "Ortoped", "Urolog", "Onkolog", "Stomatolog", "Reanimatolog"
+    "Ortoped", "Urolog", "Onkolog", "Stomatolog", "Reanimatolog","Iglaterapiya","Feldsher","Massaj"
 ]
 
 def build_grid_keyboard(items, prefix):
@@ -120,19 +121,27 @@ async def start(m: types.Message, state: FSMContext):
         [InlineKeyboardButton(text="🧑 Bemor (Chaqiruv qilish)", callback_data="role_pat")]
     ])
     await m.answer("🏥 <b>@SHIFO24_bot</b> ga xush kelibsiz! Tizimga kirish uchun rolingizni tanlang:", reply_markup=kb)
-@dp.message(Command("help"))
+ @dp.message(Command("help"))
 async def help_command(m: types.Message):
     text = (
         "🆘 <b>YORDAM MARKAZI</b>\n\n"
+        "<b>SHIFO24 bot haqida:</b>\n"
+        "Biz sizning hududingizdagi malakali shifokorlarni topishga yordam beramiz.\n\n"
+        
         "<b>Bemorlar uchun:</b>\n"
-        "• <code>/start</code> - Bosh menyuga qaytish va shifokor qidirish.\n"
-        "• Chaqiruvdan oldin shifokor reytingini va stajini tekshiring.\n\n"
+        "• <code>/start</code> - Bosh menyu va shifokorlar ro'yxati.\n\n"
+        
         "<b>Shifokorlar uchun:</b>\n"
-        "• <code>/balance</code> - Balansingizni tekshirish.\n"
-        "• <code>/start</code> - Profilingiz holatini ko'rish.\n\n"
-        "⚠️ <b>Muhim:</b> Agar sizda texnik xatolik yuz bersa yoki admin bilan bog'lanmoqchi bo'lsangiz, bizning aloqa kanalimizga yozing: @admishifo24"
+        "• <code>/balance</code> - Balansni tekshirish.\n\n"
+        
+        "⚖️ <b>Maxfiylik va Javobgarlik:</b>\n"
+        "• <b>Ogohlantirish:</b> Bot faqat axborot xizmatini ko‘rsatadi. Tibbiy yordam sifati va tashxis uchun shifokorlarning o‘zlari javobgardir.\n"
+        "• Sizning shaxsiy ma'lumotlaringiz xavfsizligi biz uchun muhim. Biz ma'lumotlarni uchinchi shaxslarga taqdim etmaymiz.\n\n"
+        
+        "⚠️ <b>Yordam kerakmi?</b>\n"
+        "Texnik xatoliklar yoki savollar uchun: @admishifo24"
     )
-    await m.answer(text)
+    await m.answer(text, parse_mode="HTML")   
 # --------------------------
 # ================= ROLE SELECTION =================
 @dp.callback_query(F.data == "role_doc")
@@ -313,7 +322,14 @@ async def pat_select_doc(c: types.CallbackQuery, state: FSMContext):
         return
     await state.update_data(doctor_id=did)
     await state.set_state(PatOrder.name)
-    await c.message.answer("📝 Ism va Familiyangizni kiriting:")
+   await c.message.answer(
+        "⚠️ <b>DIQQAT! QONUNIY OGOHLANTIRISH</b>\n\n"
+        "Shifokorni chaqirishda faqat haqiqiy ma’lumotlarni kiriting.\n\n"
+        "O‘zbekiston Respublikasi qonunchiligiga ko‘ra, bila turib yolg‘on xabar berish (shu jumladan, shifokorlarni asossiz chaqirish) qonun bilan ta’qib qilinadi va javobgarlikka tortilishga sabab bo‘lishi mumkin.\n\n"
+        "🚫 <b>Bot qoidasi:</b> Yolg‘on chaqiriqlar aniqlangan taqdirda, foydalanuvchi IDsi <b>doimiy ravishda bloklanadi</b>.\n\n"
+        "Tushungan bo'lsangiz, ism va familiyangizni kiriting:",
+        parse_mode="HTML"
+    )
     await c.answer()
 
 @dp.message(PatOrder.name)
@@ -500,7 +516,10 @@ async def finish_call(c: types.CallbackQuery):
         await c.answer()
         return
     did = call['doctor_id']
+# Vaqtni olish va bazaga yozish
+    finished_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     db.update_call(cid, 'done')
+    db.update_call_finish_time(cid, finished_time) # <--- Vaqtni saqlash
     db.set_busy(did, 0)
     db.deduct_balance(did, 10000)
     rate_kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -645,6 +664,21 @@ async def admin_list_calls(c: types.CallbackQuery):
             'cancelled_by_patient': "🧑 Bemor bekor qildi",
             'done': "🏁 Yakunlandi"
         }
+for r in rows:
+        status_text = status_map.get(r['status'], r['status'])
+        # Vaqtni qo'shish qismi
+        created_at = r['created_at'] if r['created_at'] else "Noma'lum"
+        finished_at = r['finished_at'] if r['finished_at'] else "---"
+        
+        text += (
+            f"🔢 <b>ID: {r['id']}</b>\n"
+            f"status: {status_text}\n"
+            f"⏱ <b>Ochildi:</b> {created_at}\n"
+            f"🏁 <b>Yakunlandi:</b> {finished_at}\n"
+            f"---------------------------\n"
+        )
+    await c.message.answer(text)
+    await c.answer()
         status_txt = status_map.get(r['status'], r['status'])
         text += (
             f"🔢 <b>Chaqiruv ID: {r['id']}</b>\n"
