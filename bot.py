@@ -139,7 +139,7 @@ async def help_command(m: types.Message):
     )
     await m.answer(text, parse_mode="HTML")
 
-# --- [Faylning qolgan qismi davom etadi] ---# ================= ROLE SELECTION =================
+ ================= ROLE SELECTION =================
 @dp.callback_query(F.data == "role_doc")
 async def role_doc(c: types.CallbackQuery, state: FSMContext):
     uid = c.from_user.id
@@ -667,8 +667,7 @@ async def admin_list_calls(c: types.CallbackQuery):
         status_text = status_map.get(r['status'], r['status'])
         created_at = r.get('created_at', 'Noma\'lum')
         finished_at = r.get('finished_at', '---')
-        
-        text += (
+       text += (
             f"🔢 <b>ID: {r['id']}</b>\n"
             f"📊 Status: {status_text}\n"
             f"⏱ <b>Ochildi:</b> {created_at}\n"
@@ -678,11 +677,13 @@ async def admin_list_calls(c: types.CallbackQuery):
             f"---------------------------\n"
         )
         
+    # Bu qism for siklidan tashqarida, lekin funksiya ichida (4 ta probel bilan) bo'lishi shart
     if len(text) > 4096:
         for x in range(0, len(text), 4096):
             await c.message.answer(text[x:x+4096])
     else:
         await c.message.answer(text)
+        
     await c.answer()
        status_txt = status_map.get(r['status'], r['status'])
         text += (
