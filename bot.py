@@ -644,7 +644,7 @@ async def admin_list_docs(c: types.CallbackQuery):
         
     await c.answer()
 
- @dp.callback_query(F.data == "admin_list_calls")
+@dp.callback_query(F.data == "admin_list_calls")
 async def admin_list_calls(c: types.CallbackQuery):
     if c.from_user.id != ADMIN_ID: return
     conn = db.get_db_connection()
