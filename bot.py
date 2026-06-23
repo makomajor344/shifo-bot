@@ -654,52 +654,56 @@ async def admin_list_docs(c: types.CallbackQuery):
 
 @dp.callback_query(F.data == "admin_list_calls")
 async def admin_list_calls(c: types.CallbackQuery):
-    if c.from_user.id != ADMIN_ID: return
+    if c.from_user.id != ADMIN_ID:
+        return
+
     conn = db.get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM calls ORDER BY id DESC LIMIT 20")
     rows = cursor.fetchall()
     conn.close()
-    
+
     if not rows:
-        await c.message.answer("📭 Tizimda hali chaqiriqlar bo'lmagan.")
+        await c.message.answer("📭 Tizimda chaqiriqlar yo‘q.")
         await c.answer()
         return
-        
-    text = "📋 <b>OXIRGI 20 TA CHAQIRIQLAR:</b>\n\n"
-    
+
     status_map = {
         'new': "🆕 Yangi",
-        'accepted_by_doc': "👨‍⚕️ Shifokor qabul qildi",
-        'rejected_by_doc': "❌ Shifokor rad etdi",
-        'in_progress': "🚀 Jarayonda (Shifokor yo'lda)",
-        'cancelled_by_patient': "🧑 Bemor bekor qildi",
-        'done': "🏁 Yakunlandi"
+        'accepted_by_doc': "👨‍⚕️ Qabul qilingan",
+        'rejected_by_doc': "❌ Rad etilgan",
+        'in_progress': "🚀 Jarayonda",
+        'cancelled_by_patient': "🧑 Bekor qilingan",
+        'done': "🏁 Yakunlangan"
     }
-    
+
+    text = "📋 <b>OXIRGI 20 TA CHAQIRIQ</b>\n\n"
+
     for r in rows:
-        status_text = status_map.get(r['status'], r['status'])
-        created_at = r.get('created_at', 'Noma\'lum')
-        finished_at = r.get('finished_at', '---')
+        status_txt = status_map.get(r['status'], r['status'])
+
+        created_at = r['created_at']
+        finished_at = r['finished_at'] if 'finished_at' in r.keys() else "—"
+
         text += (
-            f"🔢 <b>ID: {r['id']}</b>\n"
-            f"📊 Status: {status_text}\n"
-            f"⏱ <b>Ochildi:</b> {created_at}\n"
-            f"🏁 <b>Yakunlandi:</b> {finished_at}\n"
+            f"🔢 <b>ID:</b> {r['id']}\n"
             f"🧑 Bemor: {r['patient_name']} ({r['phone']})\n"
             f"🏠 Manzil: {r['address']}\n"
-            f"---------------------------\n"
+            f"👨‍⚕️ Doctor ID: {r['doctor_id']}\n"
+            f"🤒 Sabab: {r['complaint']}\n"
+            f"📊 Status: {status_txt}\n"
+            f"⏱ Created: {created_at}\n"
+            f"🏁 Finished: {finished_at}\n"
+            f"-------------------\n"
         )
-        
-    # Bu qism for siklidan tashqarida, lekin funksiya ichida (4 ta probel bilan) bo'lishi shart
+
     if len(text) > 4096:
-        for x in range(0, len(text), 4096):
-            await c.message.answer(text[x:x+4096])
+        for i in range(0, len(text), 4096):
+            await c.message.answer(text[i:i+4096])
     else:
         await c.message.answer(text)
-        
+
     await c.answer()
-       
 # ================= POLLING =================
 async def main():
     db.init_db()
