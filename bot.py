@@ -605,19 +605,22 @@ async def admin_reject(c: types.CallbackQuery):
     await bot.send_message(did, "🔴 Arizangiz admin tomonidan rad etildi.")
     await c.message.answer("🔴 Shifokor arizasi rad etildi va o'chirildi.")
     await c.answer()
-
 @dp.callback_query(F.data == "admin_list_docs")
 async def admin_list_docs(c: types.CallbackQuery):
-    if c.from_user.id != ADMIN_ID: return
+    if c.from_user.id != ADMIN_ID: 
+        return
+    
     conn = db.get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM doctors")
     rows = cursor.fetchall()
     conn.close()
+    
     if not rows:
         await c.message.answer("📭 Bazada birorta ham shifokor yo'q.")
         await c.answer()
         return
+    
     text = "👨‍⚕️ <b>BAZADAGI SHIFOKORLAR RO'YXATI:</b>\n\n"
     for r in rows:
         status_emoji = "🟢" if r['status'] == 'approved' else "🟡"
@@ -631,14 +634,15 @@ async def admin_list_docs(c: types.CallbackQuery):
             f"🔄 Holat: {busy_emoji}\n"
             f"---------------------------\n"
         )
-   # Funksiya ichidagi kodlar shu darajada turishi kerak
+    
+    # Matn uzunligini tekshirish va yuborish
     if len(text) > 4096:
         for x in range(0, len(text), 4096):
-            await c.message.answer(text[x:x+4096]) # Bu qator 12 ta probel ichkarida
+            await c.message.answer(text[x:x+4096])
     else:
-        await c.message.answer(text)               # Bu qator 8 ta probel ichkarida
+        await c.message.answer(text)
     
-    await c.answer(                               # Bu qator 4 ta probel ichkarida
+    await c.answer()
  @dp.callback_query(F.data == "admin_list_calls")
 async def admin_list_calls(c: types.CallbackQuery):
     if c.from_user.id != ADMIN_ID: return
