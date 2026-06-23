@@ -1,5 +1,6 @@
 ﻿import sqlite3
 import os
+from datetime import datetime
 
 # Bot qayerdan ishga tushishidan qat'iy nazar, bazani aynan bot turgan papkaga bog'lab qo'yadi.
 # Bu cmd orqali kirganda ma'lumotlar yo'qolib qolishining oldini oladi.
@@ -50,7 +51,27 @@ def init_db():
     
     conn.commit()
     conn.close()
+# YANI: Chaqiruv yaratilganda vaqtni saqlash
+def create_call(patient_id, doctor_id, patient_name, phone, age, address, complaint):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute('''
+        INSERT INTO calls (patient_id, doctor_id, patient_name, phone, age, address, complaint, created_at, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'new')
+    ''', (patient_id, doctor_id, patient_name, phone, age, address, complaint, now))
+    call_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return call_id
 
+# YANI: Chaqiruv yakunlanganda vaqtni saqlash
+def update_call_finish_time(call_id, finish_time):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE calls SET finished_at = ? WHERE id = ?", (finish_time, call_id))
+    conn.commit()
+    conn.close()
 def add_doctor(doctor_id, full_name, username, specialty, experience, district):
     conn = get_db_connection()
     cursor = conn.cursor()
