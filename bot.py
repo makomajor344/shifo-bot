@@ -2,6 +2,14 @@
 import logging
 import os
 from datetime import datetime
+# 🔥 DB RESET (to‘g‘ri path bilan)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "shifo24.db")
+
+if os.environ.get("RESET_DB") == "1":
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+        print("✅ DB reset qilindi")
 from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
