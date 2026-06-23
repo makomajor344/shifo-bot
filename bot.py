@@ -642,7 +642,7 @@ async def admin_list_docs(c: types.CallbackQuery):
         await c.message.answer(text)
     await c.answer()
 
-@dp.callback_query(F.data == "admin_list_calls")
+ @dp.callback_query(F.data == "admin_list_calls")
 async def admin_list_calls(c: types.CallbackQuery):
     if c.from_user.id != ADMIN_ID: return
     conn = db.get_db_connection()
@@ -650,36 +650,45 @@ async def admin_list_calls(c: types.CallbackQuery):
     cursor.execute("SELECT * FROM calls ORDER BY id DESC LIMIT 20")
     rows = cursor.fetchall()
     conn.close()
+    
     if not rows:
         await c.message.answer("📭 Tizimda hali chaqiriqlar bo'lmagan.")
         await c.answer()
         return
-    text = "📋 <b>OXIRGI CHAQIRIQLAR RO'YXATI (MAX 20 TA):</b>\n\n"
+        
+    text = "📋 <b>OXIRGI 20 TA CHAQIRIQLAR:</b>\n\n"
+    
+    status_map = {
+        'new': "🆕 Yangi",
+        'accepted_by_doc': "👨‍⚕️ Shifokor qabul qildi",
+        'rejected_by_doc': "❌ Shifokor rad etdi",
+        'in_progress': "🚀 Jarayonda (Shifokor yo'lda)",
+        'cancelled_by_patient': "🧑 Bemor bekor qildi",
+        'done': "🏁 Yakunlandi"
+    }
+    
     for r in rows:
-        status_map = {
-            'new': "🆕 Yangi",
-            'accepted_by_doc': "👨‍⚕️ Shifokor qabul qildi",
-            'rejected_by_doc': "❌ Shifokor rad etdi",
-            'in_progress': "🚀 Jarayonda (Shifokor yo'lda)",
-            'cancelled_by_patient': "🧑 Bemor bekor qildi",
-            'done': "🏁 Yakunlandi"
-        }
-for r in rows:
         status_text = status_map.get(r['status'], r['status'])
-        # Vaqtni qo'shish qismi
-        created_at = r['created_at'] if r['created_at'] else "Noma'lum"
-        finished_at = r['finished_at'] if r['finished_at'] else "---"
+        created_at = r.get('created_at', 'Noma\'lum')
+        finished_at = r.get('finished_at', '---')
         
         text += (
             f"🔢 <b>ID: {r['id']}</b>\n"
-            f"status: {status_text}\n"
+            f"📊 Status: {status_text}\n"
             f"⏱ <b>Ochildi:</b> {created_at}\n"
             f"🏁 <b>Yakunlandi:</b> {finished_at}\n"
+            f"🧑 Bemor: {r['patient_name']} ({r['phone']})\n"
+            f"🏠 Manzil: {r['address']}\n"
             f"---------------------------\n"
         )
-    await c.message.answer(text)
+        
+    if len(text) > 4096:
+        for x in range(0, len(text), 4096):
+            await c.message.answer(text[x:x+4096])
+    else:
+        await c.message.answer(text)
     await c.answer()
-        status_txt = status_map.get(r['status'], r['status'])
+       status_txt = status_map.get(r['status'], r['status'])
         text += (
             f"🔢 <b>Chaqiruv ID: {r['id']}</b>\n"
             f"🧑 Bemor: {r['patient_name']} ({r['phone']})\n"
