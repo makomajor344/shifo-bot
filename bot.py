@@ -121,29 +121,25 @@ async def start(m: types.Message, state: FSMContext):
         [InlineKeyboardButton(text="🧑 Bemor (Chaqiruv qilish)", callback_data="role_pat")]
     ])
     await m.answer("🏥 <b>@SHIFO24_bot</b> ga xush kelibsiz! Tizimga kirish uchun rolingizni tanlang:", reply_markup=kb)
- @dp.message(Command("help"))
+@dp.message(Command("help"))
 async def help_command(m: types.Message):
     text = (
         "🆘 <b>YORDAM MARKAZI</b>\n\n"
         "<b>SHIFO24 bot haqida:</b>\n"
         "Biz sizning hududingizdagi malakali shifokorlarni topishga yordam beramiz.\n\n"
-        
         "<b>Bemorlar uchun:</b>\n"
         "• <code>/start</code> - Bosh menyu va shifokorlar ro'yxati.\n\n"
-        
         "<b>Shifokorlar uchun:</b>\n"
         "• <code>/balance</code> - Balansni tekshirish.\n\n"
-        
         "⚖️ <b>Maxfiylik va Javobgarlik:</b>\n"
         "• <b>Ogohlantirish:</b> Bot faqat axborot xizmatini ko‘rsatadi. Tibbiy yordam sifati va tashxis uchun shifokorlarning o‘zlari javobgardir.\n"
         "• Sizning shaxsiy ma'lumotlaringiz xavfsizligi biz uchun muhim. Biz ma'lumotlarni uchinchi shaxslarga taqdim etmaymiz.\n\n"
-        
         "⚠️ <b>Yordam kerakmi?</b>\n"
         "Texnik xatoliklar yoki savollar uchun: @admishifo24"
     )
-    await m.answer(text, parse_mode="HTML")   
-# --------------------------
-# ================= ROLE SELECTION =================
+    await m.answer(text, parse_mode="HTML")
+
+# --- [Faylning qolgan qismi davom etadi] ---# ================= ROLE SELECTION =================
 @dp.callback_query(F.data == "role_doc")
 async def role_doc(c: types.CallbackQuery, state: FSMContext):
     uid = c.from_user.id
