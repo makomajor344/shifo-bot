@@ -139,7 +139,7 @@ async def help_command(m: types.Message):
     )
     await m.answer(text, parse_mode="HTML")
 
- ================= ROLE SELECTION =================
+# ================= ROLE SELECTION =================
 @dp.callback_query(F.data == "role_doc")
 async def role_doc(c: types.CallbackQuery, state: FSMContext):
     uid = c.from_user.id
