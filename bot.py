@@ -631,13 +631,14 @@ async def admin_list_docs(c: types.CallbackQuery):
             f"🔄 Holat: {busy_emoji}\n"
             f"---------------------------\n"
         )
-   if len(text) > 4096:
+   # Funksiya ichidagi kodlar shu darajada turishi kerak
+    if len(text) > 4096:
         for x in range(0, len(text), 4096):
-            await c.message.answer(text[x:x+4096])
+            await c.message.answer(text[x:x+4096]) # Bu qator 12 ta probel ichkarida
     else:
-        await c.message.answer(text)
+        await c.message.answer(text)               # Bu qator 8 ta probel ichkarida
     
-    await c.answer()
+    await c.answer()                               # Bu qator 4 ta probel ichkarida
  @dp.callback_query(F.data == "admin_list_calls")
 async def admin_list_calls(c: types.CallbackQuery):
     if c.from_user.id != ADMIN_ID: return
