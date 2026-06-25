@@ -53,7 +53,7 @@ async def keep_alive():
 # Loggingni yoqish
 logging.basicConfig(level=logging.INFO)
 
-TOKEN = "8756099041:AAFpgLFHqx1bSQQEwpz9_ZM3lvSn7z99vM8"
+TOKEN = "8756099041:AAEf-O_esR19FuJas6kcPokewml2_RASkRs"
 ADMIN_ID = 1934997334
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
