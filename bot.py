@@ -54,7 +54,7 @@ async def keep_alive():
 logging.basicConfig(level=logging.INFO)
 
 TOKEN = "8756099041:AAEf-O_esR19FuJas6kcPokewml2_RASkRs"
-ADMIN_ID = 1934997334
+ADMIN_ID = 1665296473
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 dp = Dispatcher(storage=MemoryStorage())
